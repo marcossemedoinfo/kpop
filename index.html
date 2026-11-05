@@ -1,0 +1,1671 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Guerreiras K-Pop ✨ Guarda-Roupa de Arrastar & Vestir</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Fredoka"', 'sans-serif'],
+            },
+          },
+        },
+      };
+    </script>
+    <!-- React, ReactDOM, Babel & Confetti -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <style>
+      .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.4); border-radius: 9999px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(236, 72, 153, 0.6); border-radius: 9999px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(236, 72, 153, 0.9); }
+
+      @keyframes spotlight {
+        0%, 100% { transform: rotate(-18deg) scaleY(1.1); opacity: 0.55; }
+        50% { transform: rotate(18deg) scaleY(1.2); opacity: 0.85; }
+      }
+      @keyframes spotlightReverse {
+        0%, 100% { transform: rotate(18deg) scaleY(1.15); opacity: 0.75; }
+        50% { transform: rotate(-18deg) scaleY(1.05); opacity: 0.5; }
+      }
+      .animate-spotlight-1 { animation: spotlight 4s ease-in-out infinite; transform-origin: top center; }
+      .animate-spotlight-2 { animation: spotlightReverse 5s ease-in-out infinite; transform-origin: top center; }
+
+      @keyframes popEquip {
+        0% { transform: scale(0.94); }
+        50% { transform: scale(1.04); }
+        100% { transform: scale(1); }
+      }
+      .animate-pop-equip {
+        animation: popEquip 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      /* Impede scroll acidental enquanto a criança arrasta uma roupinha no celular/tablet */
+      .draggable-card {
+        touch-action: none;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-950 text-white antialiased selection:bg-pink-500 selection:text-white overflow-x-hidden select-none">
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useState, useRef, useEffect } = React;
+
+      // Ícones SVG estilo Lucide embutidos (sem risco de falha de rede)
+      const makeIcon = (paths) => ({ className = '' }) => (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={className}
+          dangerouslySetInnerHTML={{ __html: paths }} />
+      );
+      const Sparkles = makeIcon('<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 3v4M17 5h4M5 17v4M3 19h4"/>');
+      const Scissors = makeIcon('<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/>');
+      const Palette = makeIcon('<circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 100 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.4c3 0 5.6-2.5 5.6-5.5C23 5.5 18 2 12 2z"/>');
+      const Shirt = makeIcon('<path d="M20.4 5.6L16 3a4 4 0 01-8 0L3.6 5.6a1 1 0 00-.6 1.1l.9 4.3a1 1 0 001 .8H7v9a1 1 0 001 1h8a1 1 0 001-1v-9h2.1a1 1 0 001-.8l.9-4.3a1 1 0 00-.6-1.1z"/>');
+      const SkirtIcon = makeIcon('<path d="M7 4h10l3 15H4L7 4z"/><path d="M4 19c3 2 13 2 16 0"/><line x1="10" y1="4" x2="8" y2="19"/><line x1="14" y1="4" x2="16" y2="19"/>');
+      const BootIcon = makeIcon('<path d="M7 3h6v9l5 3a2 2 0 011 1.7V20H5v-3l2-2V3z"/><line x1="5" y1="20" x2="19" y2="20"/>');
+      const Wand2 = makeIcon('<path d="M15 4V2M15 16v-2M8 9h2M20 9h2M17.8 11.8L19 13M15 9h.01M17.8 6.2L19 5M3 21l9-9M12.2 6.2L11 5"/>');
+      const Camera = makeIcon('<path d="M14.5 4h-5L7 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-3z"/><circle cx="12" cy="13" r="3"/>');
+      const PartyPopper = makeIcon('<path d="M5.8 11.3L2 22l10.7-3.8"/><path d="M4 3h.01M22 8h.01M15 2h.01M22 20h.01M22 2l-2.2.7a2.9 2.9 0 00-2 2.7v.6M11 13c1.9 1.9 3.5 3.3 5 3.5"/><path d="M5.8 11.3a2 2 0 00-.3 3.2l5 5a2 2 0 003.2-.3"/>');
+      const Shuffle = makeIcon('<path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22M18 2l4 4-4 4M2 6h1.9c1.5 0 2.9.9 3.6 2.2M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8M18 14l4 4-4 4"/>');
+      const RotateCcw = makeIcon('<path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/>');
+      const Star = makeIcon('<polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3 12 2"/>');
+      const ShieldCheck = makeIcon('<path d="M20 13c0 5-3.5 7.5-7.7 8.9a1 1 0 01-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 011-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 011.6 0C14.5 3.8 17 5 19 5a1 1 0 011 1z"/><path d="M9 12l2 2 4-4"/>');
+      const Music = makeIcon('<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>');
+      const Crown = makeIcon('<path d="M2 20h20M4 17L2 6l5 4 5-7 5 7 5-4-2 11z"/>');
+      const Heart = makeIcon('<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0016.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 002 8.5c0 2.3 1.5 4 3 5.5l7 7z"/>');
+      const Check = makeIcon('<path d="M20 6L9 17l-5-5"/>');
+      const HandGrab = makeIcon('<path d="M18 11V6a2 2 0 00-2-2v0a2 2 0 00-2 2v0"/><path d="M14 10V4a2 2 0 00-2-2v0a2 2 0 00-2 2v2"/><path d="M10 10.5V6a2 2 0 00-2-2v0a2 2 0 00-2 2v8"/><path d="M18 8a2 2 0 114 0v6a8 8 0 01-8 8h-2c-2.8 0-4.5-.8-5.9-2.3L3.3 16.7a2 2 0 012.8-2.8L8 15"/>');
+
+      // ============================================================================
+      // DADOS DAS GUERREIRAS E PEÇAS SEPARADAS (CAMISAS, SAIAS/CALÇAS, BOTAS, ETC.)
+      // ============================================================================
+      const WARRIORS = [
+        {
+          id: 'hana',
+          name: 'Hana Star',
+          title: 'Líder Vocal & Luz Estelar',
+          badge: 'Estrela Guia',
+          skin: '#FFE4D6',
+          skinShadow: '#F3C6B1',
+          eyeColor: '#EC4899',
+          themeColor: '#EC4899',
+          defaultState: {
+            hairStyle: 'twintails',
+            hairColor: '#FF499E',
+            eyeshadow: 'neon-pink',
+            blush: 'star-glow',
+            lipColor: 'cherry-gloss',
+            top: 'cyber-pink',
+            bottom: 'cyber-pink',
+            shoes: 'cyber-pink',
+            headpiece: 'headset-pro',
+            handItem: 'lightstick-star',
+            wristItem: 'holo-bracelets',
+          }
+        },
+        {
+          id: 'sora',
+          name: 'Sora Cyber',
+          title: 'Dançarina Principal & Raio Neon',
+          badge: 'Raio Azul',
+          skin: '#F5CBA7',
+          skinShadow: '#E0AC82',
+          eyeColor: '#06B6D4',
+          themeColor: '#06B6D4',
+          defaultState: {
+            hairStyle: 'bob-cyber',
+            hairColor: '#00F5D4',
+            eyeshadow: 'cyber-cyan',
+            blush: 'peach-pop',
+            lipColor: 'coral-pop',
+            top: 'neon-guardian',
+            bottom: 'neon-guardian',
+            shoes: 'neon-guardian',
+            headpiece: 'cyber-visor',
+            handItem: 'energy-ribbon',
+            wristItem: 'neon-gauntlets',
+          }
+        },
+        {
+          id: 'maya',
+          name: 'Maya Nova',
+          title: 'Rapper Espacial & Pulso Solar',
+          badge: 'Supernova',
+          skin: '#C68642',
+          skinShadow: '#A5692B',
+          eyeColor: '#A855F7',
+          themeColor: '#A855F7',
+          defaultState: {
+            hairStyle: 'space-buns',
+            hairColor: '#9B5DE5',
+            eyeshadow: 'galaxy-purple',
+            blush: 'berry-sparkle',
+            lipColor: 'galaxy-plum',
+            top: 'galaxy-idol',
+            bottom: 'galaxy-idol',
+            shoes: 'galaxy-idol',
+            headpiece: 'star-tiara',
+            handItem: 'golden-mic',
+            wristItem: 'star-cuffs',
+          }
+        },
+        {
+          id: 'luna',
+          name: 'Luna Eclipse',
+          title: 'Visual & Guardiã do Cristal',
+          badge: 'Cristal Lunar',
+          skin: '#8D5524',
+          skinShadow: '#6E3F16',
+          eyeColor: '#F59E0B',
+          themeColor: '#F59E0B',
+          defaultState: {
+            hairStyle: 'high-ponytail',
+            hairColor: '#F15BB5',
+            eyeshadow: 'gold-shimmer',
+            blush: 'crystal-hearts',
+            lipColor: 'rose-velvet',
+            top: 'aurora-prism',
+            bottom: 'aurora-prism',
+            shoes: 'aurora-prism',
+            headpiece: 'cat-headphones',
+            handItem: 'crystal-wand',
+            wristItem: 'holo-bracelets',
+          }
+        }
+      ];
+
+      // CAMISAS / TOPS / JAQUETAS (6 opções)
+      const TOPS = [
+        { id: 'cyber-pink', name: 'Jaqueta Estelar Pink', badge: 'POP STAR', primary: '#EC4899', secondary: '#38BDF8' },
+        { id: 'neon-guardian', name: 'Colete Laser Ciano', badge: 'CYBER', primary: '#06B6D4', secondary: '#A855F7' },
+        { id: 'galaxy-idol', name: 'Armadura Supernova', badge: 'GALÁXIA', primary: '#9333EA', secondary: '#FACC15' },
+        { id: 'aurora-prism', name: 'Top Laço de Cristal', badge: 'PRISMA', primary: '#38BDF8', secondary: '#EC4899' },
+        { id: 'solar-beat', name: 'Bomber Chama Dourada', badge: 'SOLAR', primary: '#F59E0B', secondary: '#EF4444' },
+        { id: 'sweet-heart', name: 'Cropped Coração Doce', badge: 'CUTE', primary: '#FB7185', secondary: '#FEF08A' },
+      ];
+
+      // SAIAS & CALÇAS (6 opções)
+      const BOTTOMS = [
+        { id: 'cyber-pink', name: 'Saia Plissada Neon', badge: 'POP STAR', primary: '#EC4899', secondary: '#38BDF8' },
+        { id: 'neon-guardian', name: 'Calça Cargo K-Pop', badge: 'CYBER', primary: '#1E1B4B', secondary: '#00F5D4' },
+        { id: 'galaxy-idol', name: 'Saia Real Galáctica', badge: 'GALÁXIA', primary: '#9333EA', secondary: '#F43F5E' },
+        { id: 'aurora-prism', name: 'Saia Pétalas Cristal', badge: 'PRISMA', primary: '#A9DEF9', secondary: '#FF99C8' },
+        { id: 'solar-beat', name: 'Minissaia Raio Solar', badge: 'SOLAR', primary: '#F59E0B', secondary: '#FEF08A' },
+        { id: 'star-jeans', name: 'Shorts Jeans Estelar', badge: 'STREET', primary: '#3B82F6', secondary: '#F472B6' },
+      ];
+
+      // BOTAS & TÊNIS (5 opções)
+      const SHOES = [
+        { id: 'cyber-pink', name: 'Botas Plataforma Pink', primary: '#EC4899', secondary: '#FDE047' },
+        { id: 'neon-guardian', name: 'Tênis Cyber Turbo', primary: '#06B6D4', secondary: '#4ADE80' },
+        { id: 'galaxy-idol', name: 'Botas Reais Violeta', primary: '#9333EA', secondary: '#FACC15' },
+        { id: 'aurora-prism', name: 'Botas Aladas Brancas', primary: '#F8FAFC', secondary: '#38BDF8' },
+        { id: 'solar-beat', name: 'Botas Chama de Ouro', primary: '#F59E0B', secondary: '#FEF08A' },
+      ];
+
+      // PENTEADOS (5 opções)
+      const HAIR_STYLES = [
+        { id: 'twintails', name: 'Maria-Chiquinha Idol', desc: 'Mechas duplas longas' },
+        { id: 'bob-cyber', name: 'Chanel Futurista', desc: 'Com presilhas neon' },
+        { id: 'space-buns', name: 'Coques Espaciais', desc: 'Coques duplos fofos' },
+        { id: 'high-ponytail', name: 'Rabo de Cavalo Alto', desc: 'Guerreira estilosa' },
+        { id: 'long-waves', name: 'Ondas de Fada K-Pop', desc: 'Longo e volumoso' },
+      ];
+
+      const HAIR_COLORS = [
+        { id: 'pink', name: 'Rosa Chiclete', hex: '#FF499E', secondary: '#FF85B3' },
+        { id: 'cyan', name: 'Ciano Cyber', hex: '#00F5D4', secondary: '#72EFDD' },
+        { id: 'purple', name: 'Violeta Galáxia', hex: '#9B5DE5', secondary: '#C77DFF' },
+        { id: 'gold', name: 'Loiro Estelar', hex: '#FEE440', secondary: '#FFF394' },
+        { id: 'crimson', name: 'Rubi Elétrico', hex: '#F15BB5', secondary: '#FF70A6' },
+        { id: 'blue', name: 'Azul Neon', hex: '#3A86FF', secondary: '#8338EC' },
+        { id: 'mint', name: 'Menta Pop', hex: '#10B981', secondary: '#6EE7B7' },
+        { id: 'silver', name: 'Prata Lunar', hex: '#E2E8F0', secondary: '#94A3B8' },
+      ];
+
+      const EYESHADOWS = [
+        { id: 'none', name: 'Natural Suave', color: 'transparent', shimmer: false },
+        { id: 'neon-pink', name: 'Brilho Rosa K-Pop', color: '#EC4899', shimmer: true },
+        { id: 'cyber-cyan', name: 'Laser Turquesa', color: '#06B6D4', shimmer: true },
+        { id: 'galaxy-purple', name: 'Nebulosa Violeta', color: '#A855F7', shimmer: true },
+        { id: 'gold-shimmer', name: 'Ouro Solar', color: '#F59E0B', shimmer: true },
+        { id: 'emerald-glow', name: 'Esmeralda Pop', color: '#10B981', shimmer: true },
+      ];
+
+      const BLUSHES = [
+        { id: 'soft-pink', name: 'Rosado Fofo', color: '#FF758F', pattern: 'soft' },
+        { id: 'star-glow', name: 'Estrelinhas Brilhantes', color: '#FF4D6D', pattern: 'stars' },
+        { id: 'peach-pop', name: 'Pêssego Cintilante', color: '#FF9E6D', pattern: 'shimmer' },
+        { id: 'berry-sparkle', name: 'Amora Mágica', color: '#E056FD', pattern: 'stars' },
+        { id: 'crystal-hearts', name: 'Corações de Cristal', color: '#FF5D8F', pattern: 'hearts' },
+      ];
+
+      const LIP_COLORS = [
+        { id: 'cherry-gloss', name: 'Gloss Cereja', color: '#FF4D6D' },
+        { id: 'coral-pop', name: 'Coral Pop', color: '#FF7B54' },
+        { id: 'galaxy-plum', name: 'Ameixa Estelar', color: '#C77DFF' },
+        { id: 'rose-velvet', name: 'Rosa Boneca', color: '#FF85A1' },
+        { id: 'berry-neon', name: 'Framboesa Neon', color: '#F72585' },
+      ];
+
+      const HEADPIECES = [
+        { id: 'none', name: 'Sem Acessório', color: '#64748B' },
+        { id: 'headset-pro', name: 'Headset Microfone', color: '#EC4899' },
+        { id: 'cyber-visor', name: 'Visor Holográfico', color: '#06B6D4' },
+        { id: 'star-tiara', name: 'Tiara das Estrelas', color: '#FACC15' },
+        { id: 'cat-headphones', name: 'Headphone Gatinho', color: '#A855F7' },
+      ];
+
+      const HAND_ITEMS = [
+        { id: 'none', name: 'Mãos Livres', color: '#64748B' },
+        { id: 'lightstick-star', name: 'Varinha Lightstick', color: '#EC4899' },
+        { id: 'golden-mic', name: 'Microfone Dourado', color: '#FACC15' },
+        { id: 'crystal-wand', name: 'Cetro de Cristal', color: '#38BDF8' },
+        { id: 'energy-ribbon', name: 'Fita Rítmica Neon', color: '#A855F7' },
+      ];
+
+      const WRIST_ITEMS = [
+        { id: 'none', name: 'Sem Pulseiras', color: '#64748B' },
+        { id: 'holo-bracelets', name: 'Pulseiras Holo', color: '#EC4899' },
+        { id: 'neon-gauntlets', name: 'Braceletes Laser', color: '#06B6D4' },
+        { id: 'star-cuffs', name: 'Munhequeira Ouro', color: '#FACC15' },
+      ];
+
+      // ============================================================================
+      // FUNÇÕES DE DESENHO SVG REUTILIZÁVEIS (USADAS NO CORPO E NAS MINIATURAS!)
+      // Assim a criança vê a miniatura idêntica à peça real e pode arrastar!
+      // ============================================================================
+      function SharedDefs() {
+        return (
+          <defs>
+            <radialGradient id="bgStudio" cx="50%" cy="45%" r="65%">
+              <stop offset="0%" stopColor="#311042" />
+              <stop offset="60%" stopColor="#160A28" />
+              <stop offset="100%" stopColor="#090414" />
+            </radialGradient>
+            <radialGradient id="bgShow" cx="50%" cy="40%" r="70%">
+              <stop offset="0%" stopColor="#4C1D95" />
+              <stop offset="45%" stopColor="#1E1B4B" />
+              <stop offset="100%" stopColor="#090414" />
+            </radialGradient>
+            <linearGradient id="fixedBodysuitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#2E1065" />
+              <stop offset="50%" stopColor="#1E1B4B" />
+              <stop offset="100%" stopColor="#0F172A" />
+            </linearGradient>
+            <linearGradient id="bodysuitTrim" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#F472B6" />
+              <stop offset="50%" stopColor="#38BDF8" />
+              <stop offset="100%" stopColor="#C084FC" />
+            </linearGradient>
+            <linearGradient id="cyberPinkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FF499E" />
+              <stop offset="60%" stopColor="#D90479" />
+              <stop offset="100%" stopColor="#7209B7" />
+            </linearGradient>
+            <linearGradient id="holoCyanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#72EFDD" />
+              <stop offset="50%" stopColor="#00BBF9" />
+              <stop offset="100%" stopColor="#4361EE" />
+            </linearGradient>
+            <linearGradient id="galaxyPurpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#C77DFF" />
+              <stop offset="50%" stopColor="#7B2CBF" />
+              <stop offset="100%" stopColor="#3C096C" />
+            </linearGradient>
+            <linearGradient id="auroraPrismGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FF99C8" />
+              <stop offset="35%" stopColor="#FCF6BD" />
+              <stop offset="70%" stopColor="#A9DEF9" />
+              <stop offset="100%" stopColor="#E4C1F9" />
+            </linearGradient>
+            <linearGradient id="solarGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FDE047" />
+              <stop offset="50%" stopColor="#F59E0B" />
+              <stop offset="100%" stopColor="#DC2626" />
+            </linearGradient>
+            <linearGradient id="sweetHeartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FF85A1" />
+              <stop offset="50%" stopColor="#F43F5E" />
+              <stop offset="100%" stopColor="#BE123C" />
+            </linearGradient>
+            <linearGradient id="stageFloorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#3B0764" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#090414" stopOpacity="1" />
+            </linearGradient>
+            <filter id="softBlur" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3.5" />
+            </filter>
+          </defs>
+        );
+      }
+
+      // Renderiza a Camisa/Jaqueta (Top)
+      function renderTopSVG(topId) {
+        switch (topId) {
+          case 'cyber-pink':
+            return (
+              <g>
+                <path d="M146,234 L254,234 L268,295 L245,305 L238,262 L232,318 L168,318 L162,262 L155,305 L132,295 Z" fill="url(#cyberPinkGrad)" stroke="#1E1B4B" strokeWidth="3.2" strokeLinejoin="round" />
+                <polygon points="154,234 186,234 176,285 148,275" fill="#38BDF8" stroke="#1E1B4B" strokeWidth="2.5" />
+                <polygon points="246,234 214,234 224,285 252,275" fill="#38BDF8" stroke="#1E1B4B" strokeWidth="2.5" />
+                <rect x="150" y="308" width="100" height="14" rx="6" fill="#FDE047" stroke="#1E1B4B" strokeWidth="2.8" />
+                <circle cx="200" cy="315" r="11" fill="#EC4899" stroke="#1E1B4B" strokeWidth="2.5" />
+                <polygon points="200,307 203,313 209,313 204,317 206,323 200,319 194,323 196,317 191,313 197,313" fill="#FDE047" />
+              </g>
+            );
+          case 'neon-guardian':
+            return (
+              <g>
+                <path d="M142,232 L258,232 L268,272 L244,282 L242,315 L158,315 L156,282 L132,272 Z" fill="url(#holoCyanGrad)" stroke="#1E1B4B" strokeWidth="3.2" strokeLinejoin="round" />
+                <path d="M132,230 L165,230 L155,260 L124,252 Z" fill="#A855F7" stroke="#1E1B4B" strokeWidth="2.8" />
+                <path d="M268,230 L235,230 L245,260 L276,252 Z" fill="#A855F7" stroke="#1E1B4B" strokeWidth="2.8" />
+                <polygon points="200,248 218,266 200,284 182,266" fill="#4ADE80" stroke="#1E1B4B" strokeWidth="2.5" />
+                <polygon points="200,254 210,266 200,278 190,266" fill="#FFFFFF" />
+                <rect x="150" y="306" width="100" height="13" rx="4" fill="#A855F7" stroke="#1E1B4B" strokeWidth="2.5" />
+                <rect x="190" y="304" width="20" height="17" rx="3" fill="#4ADE80" stroke="#1E1B4B" strokeWidth="2.5" />
+              </g>
+            );
+          case 'galaxy-idol':
+            return (
+              <g>
+                <path d="M152,235 L248,235 L242,315 L158,315 Z" fill="url(#galaxyPurpleGrad)" stroke="#1E1B4B" strokeWidth="3.2" />
+                <path d="M122,242 C135,220 165,225 174,242 L156,262 C142,256 130,252 122,242 Z" fill="#FACC15" stroke="#1E1B4B" strokeWidth="3" />
+                <path d="M278,242 C265,220 235,225 226,242 L244,262 C258,256 270,252 278,242 Z" fill="#FACC15" stroke="#1E1B4B" strokeWidth="3" />
+                <circle cx="200" cy="265" r="12" fill="#FACC15" stroke="#1E1B4B" strokeWidth="2.5" />
+                <circle cx="200" cy="265" r="7" fill="#F43F5E" />
+                <rect x="154" y="308" width="92" height="10" rx="4" fill="#FACC15" stroke="#1E1B4B" strokeWidth="2.5" />
+              </g>
+            );
+          case 'aurora-prism':
+            return (
+              <g>
+                <path d="M148,234 L252,234 L262,282 L240,290 L238,315 L162,315 L160,290 L138,282 Z" fill="url(#auroraPrismGrad)" stroke="#1E1B4B" strokeWidth="3.2" />
+                <path d="M200,265 L172,248 L176,282 Z" fill="#EC4899" stroke="#1E1B4B" strokeWidth="2.5" />
+                <path d="M200,265 L228,248 L224,282 Z" fill="#EC4899" stroke="#1E1B4B" strokeWidth="2.5" />
+                <circle cx="200" cy="265" r="8" fill="#FEF08A" stroke="#1E1B4B" strokeWidth="2.5" />
+              </g>
+            );
+          case 'solar-beat':
+            return (
+              <g>
+                <path d="M138,234 L262,234 L274,295 L246,302 L242,315 L158,315 L154,302 L126,295 Z" fill="url(#solarGoldGrad)" stroke="#1E1B4B" strokeWidth="3.2" strokeLinejoin="round" />
+                <polygon points="200,248 206,262 220,264 210,273 212,288 200,280 188,288 190,273 180,264 194,262" fill="#FEF08A" stroke="#1E1B4B" strokeWidth="2" />
+              </g>
+            );
+          case 'sweet-heart':
+            return (
+              <g>
+                {/* Mangas Bufantes Fofas */}
+                <circle cx="142" cy="258" r="20" fill="#FFB3C6" stroke="#1E1B4B" strokeWidth="3" />
+                <circle cx="258" cy="258" r="20" fill="#FFB3C6" stroke="#1E1B4B" strokeWidth="3" />
+                <path d="M150,235 L250,235 L242,316 L158,316 Z" fill="url(#sweetHeartGrad)" stroke="#1E1B4B" strokeWidth="3.2" strokeLinejoin="round" />
+                {/* Coração Central */}
+                <path d="M200,286 C200,286 178,272 178,258 C178,249 189,245 200,255 C211,245 222,249 222,258 C222,272 200,286 200,286 Z" fill="#FEF08A" stroke="#1E1B4B" strokeWidth="2.5" />
+                {/* Babado branco na cintura */}
+                <path d="M154,312 Q170,322 185,312 Q200,322 215,312 Q230,322 246,312" fill="none" stroke="#FFFFFF" strokeWidth="6" strokeLinecap="round" />
+              </g>
+            );
+          default:
+            return null;
+        }
+      }
+
+      // Renderiza a Saia/Calça (Bottom)
+      function renderBottomSVG(bottomId) {
+        switch (bottomId) {
+          case 'cyber-pink':
+            return (
+              <g>
+                <path d="M150,315 L250,315 L272,382 C225,395 175,395 128,382 Z" fill="url(#cyberPinkGrad)" stroke="#1E1B4B" strokeWidth="3.2" strokeLinejoin="round" />
+                <line x1="168" y1="320" x2="152" y2="385" stroke="#1E1B4B" strokeWidth="2.5" />
+                <line x1="190" y1="320" x2="184" y2="388" stroke="#1E1B4B" strokeWidth="2.5" />
+                <line x1="210" y1="320" x2="216" y2="388" stroke="#1E1B4B" strokeWidth="2.5" />
+                <line x1="232" y1="320" x2="248" y2="385" stroke="#1E1B4B" strokeWidth="2.5" />
+                <path d="M132,372 C175,384 225,384 268,372" fill="none" stroke="#38BDF8" strokeWidth="5" strokeLinecap="round" />
+              </g>
+            );
+          case 'neon-guardian':
+            return (
+              <g>
+                <path d="M150,312 L250,312 L262,445 L220,445 L204,358 L196,358 L180,445 L138,445 Z" fill="#1E1B4B" stroke="#1E1B4B" strokeWidth="3.2" strokeLinejoin="round" />
+                <path d="M152,320 L142,440" stroke="#00F5D4" strokeWidth="6" strokeLinecap="round" />
+                <path d="M248,320 L258,440" stroke="#00F5D4" strokeWidth="6" strokeLinecap="round" />
+                <rect x="142" y="362" width="22" height="28" rx="4" fill="#312E81" stroke="#00F5D4" strokeWidth="2" />
+                <rect x="236" y="362" width="22" height="28" rx="4" fill="#312E81" stroke="#00F5D4" strokeWidth="2" />
+              </g>
+            );
+          case 'galaxy-idol':
+            return (
+              <g>
+                <path d="M145,310 L255,310 L282,405 L245,380 L225,392 L200,375 L175,392 L155,380 L118,405 Z" fill="url(#galaxyPurpleGrad)" stroke="#1E1B4B" strokeWidth="3.2" strokeLinejoin="round" />
+                <path d="M156,315 L244,315 L256,374 C220,384 180,384 144,374 Z" fill="#F43F5E" stroke="#FACC15" strokeWidth="2.5" />
+              </g>
+            );
+          case 'aurora-prism':
+            return (
+              <g>
+                <path d="M148,312 L252,312 L276,378 Q238,395 200,375 Q162,395 124,378 Z" fill="url(#auroraPrismGrad)" stroke="#1E1B4B" strokeWidth="3.2" />
+                <path d="M158,312 L242,312 L254,362 Q200,382 146,362 Z" fill="#FFFFFF" fillOpacity="0.55" stroke="#1E1B4B" strokeWidth="2.5" />
+              </g>
+            );
+          case 'solar-beat':
+            return (
+              <g>
+                <path d="M148,312 L252,312 L268,382 L132,382 Z" fill="url(#solarGoldGrad)" stroke="#1E1B4B" strokeWidth="3.2" strokeLinejoin="round" />
+                <polygon points="200,320 222,382 178,382" fill="#FEF08A" stroke="#1E1B4B" strokeWidth="2.5" />
+              </g>
+            );
+          case 'star-jeans':
+            return (
+              <g>
+                <path d="M150,312 L250,312 L254,392 L212,392 L200,352 L188,392 L146,392 Z" fill="#2563EB" stroke="#1E1B4B" strokeWidth="3.2" strokeLinejoin="round" />
+                <rect x="144" y="384" width="46" height="10" rx="4" fill="#93C5FD" stroke="#1E1B4B" strokeWidth="2.5" />
+                <rect x="210" y="384" width="46" height="10" rx="4" fill="#93C5FD" stroke="#1E1B4B" strokeWidth="2.5" />
+                {/* Estrelinhas nos bolsos */}
+                <polygon points="166,342 169,348 176,349 171,354 172,360 166,356 160,360 161,354 156,349 163,348" fill="#FDE047" />
+                <polygon points="234,342 237,348 244,349 239,354 240,360 234,356 228,360 229,354 224,349 231,348" fill="#FDE047" />
+                {/* Corrente lateral rosa */}
+                <path d="M215,320 Q235,355 250,340" fill="none" stroke="#F472B6" strokeWidth="3.5" strokeDasharray="4 3" />
+              </g>
+            );
+          default:
+            return null;
+        }
+      }
+
+      // Renderiza as Botas/Tênis (Shoes)
+      function renderShoesSVG(shoesId) {
+        switch (shoesId) {
+          case 'cyber-pink':
+            return (
+              <g>
+                <path d="M147,402 L179,402 L177,484 C177,494 145,494 145,484 Z" fill="url(#cyberPinkGrad)" stroke="#1E1B4B" strokeWidth="3" />
+                <path d="M221,402 L253,402 L255,484 C255,494 223,494 223,484 Z" fill="url(#cyberPinkGrad)" stroke="#1E1B4B" strokeWidth="3" />
+                <rect x="145" y="400" width="35" height="10" rx="4" fill="#38BDF8" stroke="#1E1B4B" strokeWidth="2.5" />
+                <rect x="220" y="400" width="35" height="10" rx="4" fill="#38BDF8" stroke="#1E1B4B" strokeWidth="2.5" />
+                <rect x="143" y="480" width="36" height="10" rx="5" fill="#FDE047" stroke="#1E1B4B" strokeWidth="2.5" />
+                <rect x="221" y="480" width="36" height="10" rx="5" fill="#FDE047" stroke="#1E1B4B" strokeWidth="2.5" />
+              </g>
+            );
+          case 'neon-guardian':
+            return (
+              <g>
+                <path d="M140,440 L182,440 L184,486 L136,486 Z" fill="url(#holoCyanGrad)" stroke="#1E1B4B" strokeWidth="3" />
+                <path d="M218,440 L260,440 L264,486 L216,486 Z" fill="url(#holoCyanGrad)" stroke="#1E1B4B" strokeWidth="3" />
+                <rect x="134" y="480" width="52" height="10" rx="5" fill="#4ADE80" stroke="#1E1B4B" strokeWidth="2.5" />
+                <rect x="214" y="480" width="52" height="10" rx="5" fill="#4ADE80" stroke="#1E1B4B" strokeWidth="2.5" />
+              </g>
+            );
+          case 'galaxy-idol':
+            return (
+              <g>
+                <path d="M146,395 L178,395 L176,485 L144,485 Z" fill="url(#galaxyPurpleGrad)" stroke="#1E1B4B" strokeWidth="3" />
+                <path d="M222,395 L254,395 L256,485 L224,485 Z" fill="url(#galaxyPurpleGrad)" stroke="#1E1B4B" strokeWidth="3" />
+                <polygon points="162,385 170,402 154,402" fill="#FACC15" stroke="#1E1B4B" strokeWidth="2" />
+                <polygon points="238,385 246,402 230,402" fill="#FACC15" stroke="#1E1B4B" strokeWidth="2" />
+                <rect x="142" y="480" width="36" height="9" rx="4" fill="#FACC15" stroke="#1E1B4B" strokeWidth="2.5" />
+                <rect x="222" y="480" width="36" height="9" rx="4" fill="#FACC15" stroke="#1E1B4B" strokeWidth="2.5" />
+              </g>
+            );
+          case 'aurora-prism':
+            return (
+              <g>
+                <path d="M146,400 L178,400 L176,485 L144,485 Z" fill="#F8FAFC" stroke="#1E1B4B" strokeWidth="3" />
+                <path d="M222,400 L254,400 L256,485 L224,485 Z" fill="#F8FAFC" stroke="#1E1B4B" strokeWidth="3" />
+                <path d="M146,412 L178,412" stroke="#38BDF8" strokeWidth="5" />
+                <path d="M222,412 L254,412" stroke="#38BDF8" strokeWidth="5" />
+                <rect x="142" y="480" width="36" height="9" rx="4" fill="#EC4899" stroke="#1E1B4B" strokeWidth="2.5" />
+                <rect x="222" y="480" width="36" height="9" rx="4" fill="#EC4899" stroke="#1E1B4B" strokeWidth="2.5" />
+              </g>
+            );
+          case 'solar-beat':
+            return (
+              <g>
+                <path d="M146,405 L178,405 L176,485 L144,485 Z" fill="url(#solarGoldGrad)" stroke="#1E1B4B" strokeWidth="3" />
+                <path d="M222,405 L254,405 L256,485 L224,485 Z" fill="url(#solarGoldGrad)" stroke="#1E1B4B" strokeWidth="3" />
+                <rect x="142" y="480" width="36" height="9" rx="4" fill="#FEF08A" stroke="#1E1B4B" strokeWidth="2.5" />
+                <rect x="222" y="480" width="36" height="9" rx="4" fill="#FEF08A" stroke="#1E1B4B" strokeWidth="2.5" />
+              </g>
+            );
+          default:
+            return null;
+        }
+      }
+
+      // Renderiza o Cabelo Traseiro + Frontal para tanto o boneco quanto a miniatura!
+      function renderHairBackSVG(styleId, hairMain, hairHighlight) {
+        return (
+          <g>
+            {styleId === 'twintails' && (
+              <g>
+                <path d="M115,125 C65,135 50,235 65,335 C72,375 95,395 108,365 C118,340 105,235 128,165 Z" fill={hairMain} stroke="#1E1B4B" strokeWidth="3.5" strokeLinejoin="round" />
+                <path d="M92,165 C75,215 72,295 85,345" fill="none" stroke={hairHighlight} strokeWidth="6" strokeLinecap="round" opacity="0.65" />
+                <path d="M285,125 C335,135 350,235 335,335 C328,375 305,395 292,365 C282,340 295,235 272,165 Z" fill={hairMain} stroke="#1E1B4B" strokeWidth="3.5" strokeLinejoin="round" />
+                <path d="M308,165 C325,215 328,295 315,345" fill="none" stroke={hairHighlight} strokeWidth="6" strokeLinecap="round" opacity="0.65" />
+                <circle cx="118" cy="130" r="14" fill="#F472B6" stroke="#1E1B4B" strokeWidth="3" />
+                <circle cx="282" cy="130" r="14" fill="#F472B6" stroke="#1E1B4B" strokeWidth="3" />
+                <circle cx="118" cy="130" r="6" fill="#FDE047" />
+                <circle cx="282" cy="130" r="6" fill="#FDE047" />
+              </g>
+            )}
+            {styleId === 'bob-cyber' && (
+              <path d="M118,125 C95,165 98,235 122,250 C145,260 255,260 278,250 C302,235 305,165 282,125 Z" fill={hairMain} stroke="#1E1B4B" strokeWidth="3.5" strokeLinejoin="round" />
+            )}
+            {styleId === 'space-buns' && (
+              <g>
+                <circle cx="118" cy="95" r="34" fill={hairMain} stroke="#1E1B4B" strokeWidth="3.5" />
+                <circle cx="282" cy="95" r="34" fill={hairMain} stroke="#1E1B4B" strokeWidth="3.5" />
+                <path d="M100,82 A20,20 0 0,1 132,78" fill="none" stroke={hairHighlight} strokeWidth="5" strokeLinecap="round" opacity="0.75" />
+                <path d="M268,78 A20,20 0 0,1 300,82" fill="none" stroke={hairHighlight} strokeWidth="5" strokeLinecap="round" opacity="0.75" />
+                <path d="M112,125 C95,180 92,240 105,280" fill="none" stroke={hairMain} strokeWidth="14" strokeLinecap="round" />
+                <path d="M288,125 C305,180 308,240 295,280" fill="none" stroke={hairMain} strokeWidth="14" strokeLinecap="round" />
+              </g>
+            )}
+            {styleId === 'high-ponytail' && (
+              <g>
+                <path d="M200,62 C265,45 325,115 318,225 C312,290 280,330 265,295 C255,270 268,185 235,125 Z" fill={hairMain} stroke="#1E1B4B" strokeWidth="3.5" />
+                <path d="M245,82 C288,110 298,185 288,255" fill="none" stroke={hairHighlight} strokeWidth="7" strokeLinecap="round" opacity="0.7" />
+                <ellipse cx="215" cy="72" rx="18" ry="9" transform="rotate(-15 215 72)" fill="#FACC15" stroke="#1E1B4B" strokeWidth="3" />
+              </g>
+            )}
+            {styleId === 'long-waves' && (
+              <g>
+                <path d="M115,120 C75,185 78,315 102,385 C125,415 275,415 298,385 C322,315 325,185 285,120 Z" fill={hairMain} stroke="#1E1B4B" strokeWidth="3.5" strokeLinejoin="round" />
+                <path d="M105,215 C95,275 102,335 118,375" fill="none" stroke={hairHighlight} strokeWidth="7" strokeLinecap="round" opacity="0.6" />
+                <path d="M295,215 C305,275 298,335 282,375" fill="none" stroke={hairHighlight} strokeWidth="7" strokeLinecap="round" opacity="0.6" />
+              </g>
+            )}
+          </g>
+        );
+      }
+
+      function renderHairFrontSVG(styleId, hairMain, hairHighlight) {
+        return (
+          <g>
+            <path d="M122,135 C120,82 155,66 200,66 C245,66 280,82 278,135 C265,110 252,128 242,132 C232,108 215,134 200,134 C185,134 168,108 158,132 C148,128 135,110 122,135 Z" fill={hairMain} stroke="#1E1B4B" strokeWidth="3.5" strokeLinejoin="round" />
+            <path d="M122,122 C116,155 122,190 134,208 C138,185 134,155 136,128 Z" fill={hairMain} stroke="#1E1B4B" strokeWidth="3" strokeLinejoin="round" />
+            <path d="M278,122 C284,155 278,190 266,208 C262,185 266,155 264,128 Z" fill={hairMain} stroke="#1E1B4B" strokeWidth="3" strokeLinejoin="round" />
+            <path d="M150,96 Q200,82 250,96" fill="none" stroke={hairHighlight} strokeWidth="6" strokeLinecap="round" opacity="0.75" />
+            {styleId === 'bob-cyber' && (
+              <g>
+                <rect x="236" y="102" width="24" height="7" rx="3" transform="rotate(15 248 105)" fill="#00F5D4" stroke="#1E1B4B" strokeWidth="2" />
+                <rect x="240" y="112" width="20" height="6" rx="3" transform="rotate(15 250 115)" fill="#FF499E" stroke="#1E1B4B" strokeWidth="2" />
+              </g>
+            )}
+          </g>
+        );
+      }
+
+      // Renderiza Acessórios para o boneco e miniaturas
+      function renderHeadpieceSVG(id) {
+        return (
+          <g>
+            {id === 'headset-pro' && (
+              <g>
+                <path d="M122,155 C108,162 118,192 168,192" fill="none" stroke="#1E1B4B" strokeWidth="4.5" strokeLinecap="round" />
+                <circle cx="122" cy="156" r="10" fill="#EC4899" stroke="#1E1B4B" strokeWidth="2.5" />
+                <circle cx="170" cy="192" r="6" fill="#38BDF8" stroke="#1E1B4B" strokeWidth="2" />
+              </g>
+            )}
+            {id === 'cyber-visor' && (
+              <g>
+                <path d="M126,134 Q200,118 274,134 L268,164 Q200,152 132,164 Z" fill="#06B6D4" fillOpacity="0.55" stroke="#00F5D4" strokeWidth="3" />
+                <line x1="145" y1="142" x2="175" y2="138" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
+              </g>
+            )}
+            {id === 'star-tiara' && (
+              <g>
+                <path d="M148,78 L172,56 L186,72 L200,44 L214,72 L228,56 L252,78 Z" fill="#FACC15" stroke="#1E1B4B" strokeWidth="3" strokeLinejoin="round" />
+                <circle cx="200" cy="64" r="6" fill="#EC4899" stroke="#1E1B4B" strokeWidth="2" />
+                <circle cx="176" cy="69" r="4" fill="#38BDF8" />
+                <circle cx="224" cy="69" r="4" fill="#38BDF8" />
+              </g>
+            )}
+            {id === 'cat-headphones' && (
+              <g>
+                <path d="M120,155 C115,65 285,65 280,155" fill="none" stroke="#A855F7" strokeWidth="8" strokeLinecap="round" />
+                <polygon points="138,88 152,54 172,76" fill="#EC4899" stroke="#1E1B4B" strokeWidth="3" strokeLinejoin="round" />
+                <polygon points="262,88 248,54 228,76" fill="#EC4899" stroke="#1E1B4B" strokeWidth="3" strokeLinejoin="round" />
+                <ellipse cx="120" cy="156" rx="12" ry="18" fill="#38BDF8" stroke="#1E1B4B" strokeWidth="3" />
+                <ellipse cx="280" cy="156" rx="12" ry="18" fill="#38BDF8" stroke="#1E1B4B" strokeWidth="3" />
+              </g>
+            )}
+          </g>
+        );
+      }
+
+      function renderHandItemSVG(id) {
+        return (
+          <g>
+            {id === 'lightstick-star' && (
+              <g transform="translate(292, 338) rotate(15)">
+                <rect x="-5" y="-45" width="10" height="65" rx="4" fill="#F8FAFC" stroke="#1E1B4B" strokeWidth="2.8" />
+                <circle cx="0" cy="-65" r="24" fill="#38BDF8" fillOpacity="0.45" stroke="#EC4899" strokeWidth="3" />
+                <polygon points="0,-82 5,-70 18,-69 8,-60 11,-48 0,-55 -11,-48 -8,-60 -18,-69 -5,-70" fill="#FDE047" stroke="#1E1B4B" strokeWidth="2.2" />
+              </g>
+            )}
+            {id === 'golden-mic' && (
+              <g transform="translate(292, 338) rotate(-18)">
+                <rect x="-4" y="-32" width="9" height="48" rx="4" fill="#FACC15" stroke="#1E1B4B" strokeWidth="2.8" />
+                <circle cx="0" cy="-42" r="14" fill="#EC4899" stroke="#1E1B4B" strokeWidth="2.8" />
+                <path d="M-12,-42 L12,-42" stroke="#FDE047" strokeWidth="2.5" />
+              </g>
+            )}
+            {id === 'crystal-wand' && (
+              <g transform="translate(292, 338) rotate(12)">
+                <rect x="-4" y="-65" width="8" height="88" rx="4" fill="#F472B6" stroke="#1E1B4B" strokeWidth="2.8" />
+                <path d="M-4,-60 C-28,-75 -30,-45 -4,-48 Z" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="2.5" />
+                <path d="M4,-60 C28,-75 30,-45 4,-48 Z" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="2.5" />
+                <polygon points="0,-88 14,-66 0,-46 -14,-66" fill="#38BDF8" stroke="#1E1B4B" strokeWidth="2.8" />
+              </g>
+            )}
+            {id === 'energy-ribbon' && (
+              <g>
+                <path d="M292,340 C345,290 355,190 290,150 C225,110 345,65 370,115" fill="none" stroke="url(#cyberPinkGrad)" strokeWidth="8" strokeLinecap="round" />
+                <rect x="286" y="325" width="10" height="32" rx="4" fill="#38BDF8" stroke="#1E1B4B" strokeWidth="2.5" />
+              </g>
+            )}
+          </g>
+        );
+      }
+
+      function renderWristItemSVG(id) {
+        return (
+          <g>
+            {id === 'holo-bracelets' && (
+              <g>
+                <ellipse cx="114" cy="326" rx="13" ry="7" transform="rotate(-22 114 326)" fill="#EC4899" stroke="#1E1B4B" strokeWidth="2.5" />
+                <ellipse cx="116" cy="318" rx="12" ry="6" transform="rotate(-22 116 318)" fill="#38BDF8" stroke="#1E1B4B" strokeWidth="2.5" />
+                <ellipse cx="286" cy="326" rx="13" ry="7" transform="rotate(22 286 326)" fill="#EC4899" stroke="#1E1B4B" strokeWidth="2.5" />
+                <ellipse cx="284" cy="318" rx="12" ry="6" transform="rotate(22 284 318)" fill="#38BDF8" stroke="#1E1B4B" strokeWidth="2.5" />
+              </g>
+            )}
+            {id === 'neon-gauntlets' && (
+              <g>
+                <polygon points="106,332 124,338 134,305 116,298" fill="#06B6D4" stroke="#1E1B4B" strokeWidth="2.8" />
+                <polygon points="294,332 276,338 266,305 284,298" fill="#06B6D4" stroke="#1E1B4B" strokeWidth="2.8" />
+                <circle cx="120" cy="318" r="5" fill="#FDE047" />
+                <circle cx="280" cy="318" r="5" fill="#FDE047" />
+              </g>
+            )}
+            {id === 'star-cuffs' && (
+              <g>
+                <rect x="104" y="312" width="22" height="16" rx="5" transform="rotate(-20 115 320)" fill="#FACC15" stroke="#1E1B4B" strokeWidth="2.5" />
+                <rect x="274" y="312" width="22" height="16" rx="5" transform="rotate(20 285 320)" fill="#FACC15" stroke="#1E1B4B" strokeWidth="2.5" />
+              </g>
+            )}
+          </g>
+        );
+      }
+
+      // ============================================================================
+      // MINIATURA ILUSTRADA DA PEÇA (No Cabide / Armário e Durante o Arrasto)
+      // ============================================================================
+      function GarmentPreviewSVG({ category, itemId, hairColor = '#FF499E', hairSecondary = '#FF85B3' }) {
+        let viewBox = '115 220 170 110';
+        let content = null;
+
+        if (category === 'top') {
+          viewBox = '115 222 170 108';
+          content = renderTopSVG(itemId);
+        } else if (category === 'bottom') {
+          viewBox = '110 302 180 150';
+          content = renderBottomSVG(itemId);
+        } else if (category === 'shoes') {
+          viewBox = '125 385 150 115';
+          content = renderShoesSVG(itemId);
+        } else if (category === 'hairStyle') {
+          viewBox = '45 40 310 350';
+          content = (
+            <g>
+              {renderHairBackSVG(itemId, hairColor, hairSecondary)}
+              <circle cx="200" cy="150" r="62" fill="#334155" opacity="0.35" stroke="#94A3B8" strokeWidth="2" strokeDasharray="5 5" />
+              {renderHairFrontSVG(itemId, hairColor, hairSecondary)}
+            </g>
+          );
+        } else if (category === 'headpiece') {
+          viewBox = '100 35 200 175';
+          content = itemId === 'none' ? (
+            <text x="200" y="135" textAnchor="middle" fill="#94A3B8" fontSize="22" fontWeight="bold">✕ Livre</text>
+          ) : (
+            <g>
+              <circle cx="200" cy="145" r="55" fill="#334155" opacity="0.25" />
+              {renderHeadpieceSVG(itemId)}
+            </g>
+          );
+        } else if (category === 'handItem') {
+          viewBox = '235 60 140 310';
+          content = itemId === 'none' ? (
+            <text x="305" y="215" textAnchor="middle" fill="#94A3B8" fontSize="22" fontWeight="bold">✕ Livre</text>
+          ) : (
+            renderHandItemSVG(itemId)
+          );
+        } else if (category === 'wristItem') {
+          viewBox = '90 290 220 65';
+          content = itemId === 'none' ? (
+            <text x="200" y="330" textAnchor="middle" fill="#94A3B8" fontSize="20" fontWeight="bold">✕ Livre</text>
+          ) : (
+            renderWristItemSVG(itemId)
+          );
+        }
+
+        return (
+          <svg viewBox={viewBox} className="w-full h-full drop-shadow-md pointer-events-none">
+            <SharedDefs />
+            {content}
+          </svg>
+        );
+      }
+
+      // ============================================================================
+      // CANVAS PRINCIPAL DA GUERREIRA K-POP NO PALCO
+      // ============================================================================
+      function WarriorCanvas({ svgRef, warrior, state, showMode, isDragOverCharacter, equipAnim }) {
+        const hairColorObj = HAIR_COLORS.find((c) => c.hex === state.hairColor) || HAIR_COLORS[0];
+        const eyeshadowObj = EYESHADOWS.find((e) => e.id === state.eyeshadow) || EYESHADOWS[0];
+        const blushObj = BLUSHES.find((b) => b.id === state.blush) || BLUSHES[0];
+        const lipObj = LIP_COLORS.find((l) => l.id === state.lipColor) || LIP_COLORS[0];
+
+        const hairMain = hairColorObj.hex;
+        const hairHighlight = hairColorObj.secondary || '#FFFFFF';
+
+        return (
+          <svg
+            ref={svgRef}
+            viewBox="0 0 400 560"
+            className={`w-full h-full max-h-[540px] select-none drop-shadow-2xl transition-transform duration-300 ${
+              equipAnim ? 'animate-pop-equip' : ''
+            }`}
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <SharedDefs />
+
+            {/* 1. FUNDO E PALCO */}
+            <rect x="0" y="0" width="400" height="560" rx="28" fill={showMode ? 'url(#bgShow)' : 'url(#bgStudio)'} />
+            <circle cx="200" cy="230" r="145" fill="none" stroke={showMode ? '#F472B6' : '#8B5CF6'} strokeWidth="2" strokeDasharray="8 6" opacity="0.35" />
+            <circle cx="200" cy="230" r="125" fill="none" stroke="#38BDF8" strokeWidth="1.5" opacity="0.25" />
+
+            {/* Halo brilhante quando a criança está arrastando uma roupa para cima da boneca */}
+            {isDragOverCharacter && (
+              <g>
+                <rect x="10" y="10" width="380" height="540" rx="24" fill="#EC4899" fillOpacity="0.14" stroke="#FDE047" strokeWidth="4" strokeDasharray="12 8" />
+                <circle cx="200" cy="270" r="160" fill="none" stroke="#00F5D4" strokeWidth="3.5" opacity="0.8" />
+              </g>
+            )}
+
+            {showMode && (
+              <g opacity="0.75">
+                <polygon points="50,0 130,0 280,520 120,520" fill="url(#cyberPinkGrad)" opacity="0.28" />
+                <polygon points="350,0 270,0 120,520 280,520" fill="url(#holoCyanGrad)" opacity="0.28" />
+                <polygon points="200,0 240,0 260,520 140,520" fill="#FDE047" opacity="0.18" />
+              </g>
+            )}
+
+            <ellipse cx="200" cy="505" rx="155" ry="32" fill="url(#stageFloorGrad)" stroke={showMode ? '#F472B6' : '#6D28D9'} strokeWidth="3" />
+            <ellipse cx="200" cy="505" rx="125" ry="22" fill="none" stroke="#38BDF8" strokeWidth="2" strokeDasharray="12 6" opacity="0.7" />
+            <ellipse cx="200" cy="495" rx="60" ry="12" fill="#05020A" opacity="0.65" />
+
+            <g fill="#FDE047" opacity={showMode ? '0.95' : '0.45'}>
+              <path d="M55,95 L59,105 L69,109 L59,113 L55,123 L51,113 L41,109 L51,105 Z" />
+              <path d="M345,115 L348,123 L356,126 L348,129 L345,137 L342,129 L334,126 L342,123 Z" fill="#38BDF8" />
+              <path d="M65,320 L68,327 L75,330 L68,333 L65,340 L62,333 L55,330 L62,327 Z" fill="#F472B6" />
+              <path d="M335,295 L339,305 L349,309 L339,313 L335,323 L331,313 L321,309 L331,305 Z" />
+            </g>
+
+            {/* 2. CABELO TRASEIRO */}
+            <g id="layer-hair-back">
+              {renderHairBackSVG(state.hairStyle, hairMain, hairHighlight)}
+            </g>
+
+            {/* 3. CORPO BASE + COLLANT ESPORTIVO FIXO (INSEPARÁVEL) */}
+            <g id="layer-base-body-with-fixed-bodysuit">
+              <rect x="184" y="210" width="32" height="36" rx="10" fill={warrior.skinShadow} stroke="#1E1B4B" strokeWidth="3" />
+              <path d="M158,345 L150,475 C150,485 174,485 174,475 L184,345 Z" fill={warrior.skin} stroke="#1E1B4B" strokeWidth="3" strokeLinejoin="round" />
+              <path d="M216,345 L226,475 C226,485 250,485 250,475 L242,345 Z" fill={warrior.skin} stroke="#1E1B4B" strokeWidth="3" strokeLinejoin="round" />
+              <path d="M150,242 C125,255 110,295 102,335 C99,346 115,352 120,340 C130,310 142,280 158,265 Z" fill={warrior.skin} stroke="#1E1B4B" strokeWidth="3" strokeLinejoin="round" />
+              <circle cx="108" cy="342" r="11" fill={warrior.skin} stroke="#1E1B4B" strokeWidth="3" />
+              <path d="M250,242 C275,255 290,295 298,335 C301,346 285,352 280,340 C270,310 258,280 242,265 Z" fill={warrior.skin} stroke="#1E1B4B" strokeWidth="3" strokeLinejoin="round" />
+              <circle cx="292" cy="342" r="11" fill={warrior.skin} stroke="#1E1B4B" strokeWidth="3" />
+
+              {/* COLLANT ESPORTIVO FIXO INTEGRADO NO SVG BASE */}
+              <g id="permanent-modesty-bodysuit">
+                <path d="M154,238 C136,246 126,266 122,282 L142,290 C148,275 154,262 162,256 Z" fill="url(#fixedBodysuitGrad)" stroke="#1E1B4B" strokeWidth="3" />
+                <path d="M246,238 C264,246 274,266 278,282 L258,290 C252,275 246,262 238,256 Z" fill="url(#fixedBodysuitGrad)" stroke="#1E1B4B" strokeWidth="3" />
+                <path d="M154,236 C168,232 184,235 200,235 C216,235 232,232 246,236 C252,268 242,300 246,332 L248,388 L215,388 L205,350 L195,350 L185,388 L152,388 L154,332 C158,300 148,268 154,236 Z" fill="url(#fixedBodysuitGrad)" stroke="#1E1B4B" strokeWidth="3.2" strokeLinejoin="round" />
+                <path d="M174,234 Q200,246 226,234 L222,246 Q200,256 178,246 Z" fill="url(#bodysuitTrim)" stroke="#1E1B4B" strokeWidth="2" />
+                <path d="M172,246 C176,285 174,330 170,386" fill="none" stroke="#38BDF8" strokeWidth="2.5" opacity="0.75" />
+                <path d="M228,246 C224,285 226,330 230,386" fill="none" stroke="#38BDF8" strokeWidth="2.5" opacity="0.75" />
+                <rect x="151" y="382" width="35" height="7" rx="3" fill="url(#bodysuitTrim)" stroke="#1E1B4B" strokeWidth="2" />
+                <rect x="214" y="382" width="35" height="7" rx="3" fill="url(#bodysuitTrim)" stroke="#1E1B4B" strokeWidth="2" />
+                <polygon points="200,258 204,267 214,268 206,274 209,284 200,278 191,284 194,274 186,268 196,267" fill="#FDE047" stroke="#1E1B4B" strokeWidth="1.5" />
+              </g>
+
+              <path d="M148,440 L176,440 L176,482 C176,492 146,492 146,482 Z" fill="#1E1B4B" stroke="#1E1B4B" strokeWidth="3" />
+              <path d="M224,440 L252,440 L254,482 C254,492 224,492 224,482 Z" fill="#1E1B4B" stroke="#1E1B4B" strokeWidth="3" />
+            </g>
+
+            {/* 4. CAMADAS DE ROUPAS SEPARADAS (SAPATOS + SAIA/CALÇA + CAMISA/JAQUETA) */}
+            <g id="layer-shoes">{renderShoesSVG(state.shoes)}</g>
+            <g id="layer-bottom">{renderBottomSVG(state.bottom)}</g>
+            <g id="layer-top">{renderTopSVG(state.top)}</g>
+
+            {/* 5. BRACELETES */}
+            <g id="layer-wrist-items">{renderWristItemSVG(state.wristItem)}</g>
+
+            {/* 6. CABEÇA E ROSTO CHIBI */}
+            <g id="layer-head">
+              <circle cx="122" cy="162" r="14" fill={warrior.skin} stroke="#1E1B4B" strokeWidth="3" />
+              <circle cx="278" cy="162" r="14" fill={warrior.skin} stroke="#1E1B4B" strokeWidth="3" />
+              <circle cx="120" cy="174" r="4.5" fill="#FDE047" stroke="#1E1B4B" strokeWidth="1.5" />
+              <circle cx="280" cy="174" r="4.5" fill="#FDE047" stroke="#1E1B4B" strokeWidth="1.5" />
+              <rect x="124" y="78" width="152" height="142" rx="68" fill={warrior.skin} stroke="#1E1B4B" strokeWidth="3.5" />
+
+              {/* 7. MAQUIAGEM */}
+              <g id="layer-makeup">
+                {eyeshadowObj.id !== 'none' && (
+                  <g opacity="0.72">
+                    <path d="M138,144 Q158,125 180,144 Q158,136 138,144 Z" fill={eyeshadowObj.color} filter="url(#softBlur)" />
+                    <path d="M220,144 Q242,125 262,144 Q242,136 220,144 Z" fill={eyeshadowObj.color} filter="url(#softBlur)" />
+                    {eyeshadowObj.shimmer && (
+                      <g fill="#FFFFFF">
+                        <circle cx="146" cy="136" r="2" />
+                        <circle cx="160" cy="132" r="1.8" />
+                        <circle cx="240" cy="132" r="1.8" />
+                        <circle cx="254" cy="136" r="2" />
+                      </g>
+                    )}
+                  </g>
+                )}
+
+                <g>
+                  <ellipse cx="146" cy="178" rx="16" ry="9" fill={blushObj.color} opacity="0.55" filter="url(#softBlur)" />
+                  <ellipse cx="254" cy="178" rx="16" ry="9" fill={blushObj.color} opacity="0.55" filter="url(#softBlur)" />
+                  {blushObj.pattern === 'stars' && (
+                    <g fill="#FEF08A">
+                      <polygon points="140,175 142,178 145,179 142,180 140,183 138,180 135,179 138,178" />
+                      <circle cx="152" cy="181" r="1.8" fill="#FFFFFF" />
+                      <polygon points="260,175 262,178 265,179 262,180 260,183 258,180 255,179 258,178" />
+                      <circle cx="248" cy="181" r="1.8" fill="#FFFFFF" />
+                    </g>
+                  )}
+                  {blushObj.pattern === 'hearts' && (
+                    <g fill="#FFFFFF" opacity="0.9">
+                      <circle cx="143" cy="177" r="2" />
+                      <circle cx="151" cy="180" r="1.5" />
+                      <circle cx="257" cy="177" r="2" />
+                      <circle cx="249" cy="180" r="1.5" />
+                    </g>
+                  )}
+                  {blushObj.pattern === 'shimmer' && (
+                    <g stroke="#FFFFFF" strokeWidth="1.8" strokeLinecap="round" opacity="0.8">
+                      <line x1="140" y1="178" x2="144" y2="174" />
+                      <line x1="148" y1="180" x2="152" y2="176" />
+                      <line x1="248" y1="178" x2="252" y2="174" />
+                      <line x1="256" y1="180" x2="260" y2="176" />
+                    </g>
+                  )}
+                </g>
+
+                <g>
+                  <path d="M188,186 Q200,198 212,186 Q200,204 188,186 Z" fill={lipObj.color} stroke="#1E1B4B" strokeWidth="2.2" strokeLinejoin="round" />
+                  <ellipse cx="203" cy="192" rx="4" ry="1.8" fill="#FFFFFF" opacity="0.85" />
+                </g>
+              </g>
+
+              {/* OLHOS */}
+              <g id="layer-eyes">
+                <ellipse cx="160" cy="156" rx="18" ry="20" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="3" />
+                <ellipse cx="162" cy="157" rx="13" ry="15" fill={warrior.eyeColor} />
+                <circle cx="162" cy="158" r="7" fill="#1E1B4B" />
+                <circle cx="156" cy="149" r="5" fill="#FFFFFF" />
+                <circle cx="167" cy="164" r="2.5" fill="#FFFFFF" />
+                <path d="M139,146 Q160,130 180,148" fill="none" stroke="#1E1B4B" strokeWidth="4.5" strokeLinecap="round" />
+                <path d="M139,146 L133,140" stroke="#1E1B4B" strokeWidth="3" strokeLinecap="round" />
+
+                <ellipse cx="240" cy="156" rx="18" ry="20" fill="#FFFFFF" stroke="#1E1B4B" strokeWidth="3" />
+                <ellipse cx="238" cy="157" rx="13" ry="15" fill={warrior.eyeColor} />
+                <circle cx="238" cy="158" r="7" fill="#1E1B4B" />
+                <circle cx="232" cy="149" r="5" fill="#FFFFFF" />
+                <circle cx="243" cy="164" r="2.5" fill="#FFFFFF" />
+                <path d="M220,148 Q240,130 261,146" fill="none" stroke="#1E1B4B" strokeWidth="4.5" strokeLinecap="round" />
+                <path d="M261,146 L267,140" stroke="#1E1B4B" strokeWidth="3" strokeLinecap="round" />
+
+                <path d="M144,126 Q160,120 176,126" fill="none" stroke="#1E1B4B" strokeWidth="3" strokeLinecap="round" />
+                <path d="M224,126 Q240,120 256,126" fill="none" stroke="#1E1B4B" strokeWidth="3" strokeLinecap="round" />
+                <path d="M199,168 L202,172 L199,174" fill="none" stroke="#1E1B4B" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              </g>
+            </g>
+
+            {/* 8. FRANJA / CABELO FRONTAL */}
+            <g id="layer-hair-front">
+              {renderHairFrontSVG(state.hairStyle, hairMain, hairHighlight)}
+            </g>
+
+            {/* 9. ACESSÓRIOS DE CABEÇA */}
+            <g id="layer-headpiece">{renderHeadpieceSVG(state.headpiece)}</g>
+
+            {/* 10. ACESSÓRIOS DE MÃO */}
+            <g id="layer-hand-items">{renderHandItemSVG(state.handItem)}</g>
+
+            {showMode && (
+              <g id="layer-show-sparkles">
+                <circle cx="85" cy="185" r="5" fill="#FDE047" />
+                <circle cx="315" cy="175" r="6" fill="#00F5D4" />
+                <circle cx="75" cy="420" r="5" fill="#FF499E" />
+                <circle cx="325" cy="410" r="7" fill="#FDE047" />
+                <text x="58" y="245" fontSize="26" fill="#FF499E">♪</text>
+                <text x="322" y="235" fontSize="28" fill="#00F5D4">♫</text>
+                <text x="82" y="145" fontSize="22" fill="#FDE047">★</text>
+              </g>
+            )}
+
+            <g transform="translate(200, 535)">
+              <rect x="-95" y="-16" width="190" height="26" rx="13" fill="#0F172A" fillOpacity="0.85" stroke={warrior.themeColor} strokeWidth="2" />
+              <text x="0" y="2" textAnchor="middle" fill="#FFFFFF" fontSize="13" fontWeight="700" fontFamily="Fredoka, sans-serif" letterSpacing="1">
+                ★ {warrior.name.toUpperCase()} ★
+              </text>
+            </g>
+          </svg>
+        );
+      }
+
+      // ============================================================================
+      // MENU VERTICAL DE CATEGORIAS INFANTIL (BOTÕES GRANDES E COLORIDOS)
+      // ============================================================================
+      const CATEGORIES = [
+        { id: 'tops', label: 'Camisas', sub: 'Jaquetas & Tops', icon: Shirt, gradient: 'from-pink-500 to-rose-500', border: 'border-pink-300' },
+        { id: 'bottoms', label: 'Saias & Calças', sub: 'Shorts & Saias', icon: SkirtIcon, gradient: 'from-cyan-500 to-blue-500', border: 'border-cyan-300' },
+        { id: 'shoes', label: 'Botas & Tênis', sub: 'Sapatos K-Pop', icon: BootIcon, gradient: 'from-amber-400 to-orange-500', border: 'border-amber-300' },
+        { id: 'hair', label: 'Cabelos', sub: 'Cortes & Cores', icon: Scissors, gradient: 'from-fuchsia-500 to-purple-600', border: 'border-fuchsia-300' },
+        { id: 'makeup', label: 'Maquiagem', sub: 'Sombra & Blush', icon: Palette, gradient: 'from-rose-400 to-pink-600', border: 'border-rose-300' },
+        { id: 'accessories', label: 'Acessórios', sub: 'Mão & Cabeça', icon: Wand2, gradient: 'from-violet-500 to-indigo-600', border: 'border-violet-300' },
+      ];
+
+      function App() {
+        const [selectedWarriorId, setSelectedWarriorId] = useState(WARRIORS[0].id);
+        const [activeCategory, setActiveCategory] = useState('tops');
+        const [showMode, setShowMode] = useState(false);
+        const [photoSavedToast, setPhotoSavedToast] = useState(false);
+        const [equipAnim, setEquipAnim] = useState(false);
+
+        // Estado do Drag & Drop (Arrastar peça até o corpo)
+        const [draggedItem, setDraggedItem] = useState(null);
+        // { categoryKey, itemId, name, x, y, startX, startY }
+        const [isOverCharacter, setIsOverCharacter] = useState(false);
+
+        const currentWarrior = WARRIORS.find((w) => w.id === selectedWarriorId) || WARRIORS[0];
+        const [customState, setCustomState] = useState({ ...WARRIORS[0].defaultState });
+
+        const svgRef = useRef(null);
+        const stageDropRef = useRef(null);
+
+        const handleSelectWarrior = (warrior) => {
+          setSelectedWarriorId(warrior.id);
+          setCustomState({ ...warrior.defaultState });
+        };
+
+        const updateItem = (key, value) => {
+          setCustomState((prev) => ({ ...prev, [key]: value }));
+          setEquipAnim(true);
+          setTimeout(() => setEquipAnim(false), 380);
+        };
+
+        // Lógica de Arrastar e Soltar no Corpo (Funciona com Mouse e Toque Infantil!)
+        const handleStartDrag = (e, categoryKey, itemId, name) => {
+          e.preventDefault();
+          const clientX = e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? 0;
+          const clientY = e.clientY ?? (e.touches && e.touches[0]?.clientY) ?? 0;
+
+          setDraggedItem({
+            categoryKey,
+            itemId,
+            name,
+            x: clientX,
+            y: clientY,
+            startX: clientX,
+            startY: clientY,
+          });
+        };
+
+        useEffect(() => {
+          if (!draggedItem) return;
+
+          const checkInsideCharacter = (x, y) => {
+            if (!stageDropRef.current) return false;
+            const rect = stageDropRef.current.getBoundingClientRect();
+            // Margem generosa para facilitar para crianças pequenas
+            return (
+              x >= rect.left - 35 &&
+              x <= rect.right + 35 &&
+              y >= rect.top - 35 &&
+              y <= rect.bottom + 35
+            );
+          };
+
+          const handlePointerMove = (e) => {
+            const x = e.clientX;
+            const y = e.clientY;
+            setDraggedItem((prev) => (prev ? { ...prev, x, y } : null));
+            setIsOverCharacter(checkInsideCharacter(x, y));
+          };
+
+          const handlePointerUp = (e) => {
+            const x = e.clientX;
+            const y = e.clientY;
+            const dist = Math.hypot(x - draggedItem.startX, y - draggedItem.startY);
+
+            // Se a criança arrastou e soltou em cima da personagem OU se apenas clicou na peça, veste a roupa!
+            if (checkInsideCharacter(x, y) || dist < 14) {
+              updateItem(draggedItem.categoryKey, draggedItem.itemId);
+              if (window.confetti && checkInsideCharacter(x, y)) {
+                window.confetti({
+                  particleCount: 28,
+                  spread: 55,
+                  origin: { x: x / window.innerWidth, y: y / window.innerHeight },
+                  colors: ['#FF499E', '#00F5D4', '#FEE440'],
+                });
+              }
+            }
+            setDraggedItem(null);
+            setIsOverCharacter(false);
+          };
+
+          window.addEventListener('pointermove', handlePointerMove);
+          window.addEventListener('pointerup', handlePointerUp);
+          return () => {
+            window.removeEventListener('pointermove', handlePointerMove);
+            window.removeEventListener('pointerup', handlePointerUp);
+          };
+        }, [draggedItem]);
+
+        const fireShowConfetti = () => {
+          if (window.confetti) {
+            window.confetti({
+              particleCount: 75,
+              spread: 80,
+              origin: { y: 0.6 },
+              colors: ['#FF499E', '#00F5D4', '#FEE440', '#9B5DE5', '#38BDF8'],
+            });
+          }
+        };
+
+        const toggleShowMode = () => {
+          const nextState = !showMode;
+          setShowMode(nextState);
+          if (nextState) fireShowConfetti();
+        };
+
+        useEffect(() => {
+          if (!showMode) return;
+          const interval = setInterval(() => {
+            if (window.confetti) {
+              window.confetti({ particleCount: 25, angle: 60, spread: 55, origin: { x: 0, y: 0.65 }, colors: ['#FF499E', '#00F5D4', '#FEE440'] });
+              window.confetti({ particleCount: 25, angle: 120, spread: 55, origin: { x: 1, y: 0.65 }, colors: ['#9B5DE5', '#38BDF8', '#FEE440'] });
+            }
+          }, 2800);
+          return () => clearInterval(interval);
+        }, [showMode]);
+
+        const handleRandomize = () => {
+          const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+          setCustomState({
+            hairStyle: pick(HAIR_STYLES).id,
+            hairColor: pick(HAIR_COLORS).hex,
+            eyeshadow: pick(EYESHADOWS.filter((i) => i.id !== 'none')).id,
+            blush: pick(BLUSHES).id,
+            lipColor: pick(LIP_COLORS).id,
+            top: pick(TOPS).id,
+            bottom: pick(BOTTOMS).id,
+            shoes: pick(SHOES).id,
+            headpiece: pick(HEADPIECES.filter((i) => i.id !== 'none')).id,
+            handItem: pick(HAND_ITEMS.filter((i) => i.id !== 'none')).id,
+            wristItem: pick(WRIST_ITEMS.filter((i) => i.id !== 'none')).id,
+          });
+          setEquipAnim(true);
+          setTimeout(() => setEquipAnim(false), 380);
+        };
+
+        const handleReset = () => {
+          setCustomState({ ...currentWarrior.defaultState });
+          setEquipAnim(true);
+          setTimeout(() => setEquipAnim(false), 380);
+        };
+
+        const handleSavePhoto = () => {
+          if (!svgRef.current) return;
+          const svgElement = svgRef.current;
+          const serializer = new XMLSerializer();
+          let svgString = serializer.serializeToString(svgElement);
+          if (!svgString.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+            svgString = svgString.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+          }
+          const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+          const url = URL.createObjectURL(svgBlob);
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 800;
+            canvas.height = 1120;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            URL.revokeObjectURL(url);
+            const pngUrl = canvas.toDataURL('image/png');
+            const downloadLink = document.createElement('a');
+            downloadLink.href = pngUrl;
+            downloadLink.download = `guerreira-kpop-${currentWarrior.id}.png`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            setPhotoSavedToast(true);
+            if (window.confetti) window.confetti({ particleCount: 45, spread: 60, origin: { y: 0.7 } });
+            setTimeout(() => setPhotoSavedToast(false), 3200);
+          };
+          img.src = url;
+        };
+
+        const hairColorObj = HAIR_COLORS.find((c) => c.hex === customState.hairColor) || HAIR_COLORS[0];
+
+        // Componente de Card de Roupa Arrastável (Vitrine Infantil)
+        const renderDraggableCard = (categoryKey, itemId, title, badgeText, active) => (
+          <div
+            key={itemId}
+            onPointerDown={(e) => handleStartDrag(e, categoryKey, itemId, title)}
+            className={`draggable-card group relative flex flex-col items-center justify-between p-3 rounded-3xl border-3 cursor-grab active:cursor-grabbing transition-all duration-200 select-none ${
+              active
+                ? 'bg-gradient-to-b from-pink-500/30 to-purple-700/40 border-2 border-yellow-300 shadow-[0_0_20px_rgba(253,224,71,0.35)] scale-[1.02]'
+                : 'bg-slate-800/80 hover:bg-slate-800 border-2 border-purple-500/30 hover:border-pink-400/70 hover:scale-[1.03]'
+            }`}
+          >
+            {/* Selo de Vestido Atualmente */}
+            {active && (
+              <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-yellow-300 text-slate-950 flex items-center justify-center shadow-md z-10">
+                <Check className="w-4 h-4" />
+              </span>
+            )}
+
+            {badgeText && (
+              <span className="self-start text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-pink-500/30 text-pink-200 border border-pink-400/30 mb-1">
+                {badgeText}
+              </span>
+            )}
+
+            {/* Desenho grande da Roupa / Item no Cabide */}
+            <div className="w-28 h-28 sm:w-32 sm:h-32 bg-slate-950/70 rounded-2xl p-2 flex items-center justify-center border border-white/10 group-hover:border-pink-400/40 transition overflow-hidden">
+              <GarmentPreviewSVG
+                category={categoryKey}
+                itemId={itemId}
+                hairColor={hairColorObj.hex}
+                hairSecondary={hairColorObj.secondary}
+              />
+            </div>
+
+            <div className="mt-2 text-center">
+              <p className="text-xs sm:text-sm font-bold text-white leading-tight">{title}</p>
+              <span className="inline-flex items-center gap-1 text-[11px] text-cyan-300 font-semibold mt-0.5">
+                <HandGrab className="w-3 h-3" /> Arraste até ela!
+              </span>
+            </div>
+          </div>
+        );
+
+        return (
+          <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 text-white flex flex-col justify-between relative overflow-hidden">
+            {/* PEÇA FLUTUANTE SEGUINDO O DEDO / MOUSE ENQUANTO A CRIANÇA ARRASTA */}
+            {draggedItem && (
+              <div
+                style={{
+                  left: draggedItem.x,
+                  top: draggedItem.y,
+                  transform: 'translate(-50%, -50%) scale(1.15)',
+                }}
+                className="fixed z-50 pointer-events-none w-36 h-36 rounded-3xl bg-pink-500/30 backdrop-blur-md border-4 border-yellow-300 shadow-[0_0_40px_rgba(236,72,153,0.9)] flex flex-col items-center justify-center p-2"
+              >
+                <GarmentPreviewSVG
+                  category={draggedItem.categoryKey}
+                  itemId={draggedItem.itemId}
+                  hairColor={hairColorObj.hex}
+                  hairSecondary={hairColorObj.secondary}
+                />
+                <span className="px-2 py-0.5 rounded-full bg-yellow-300 text-slate-950 font-extrabold text-[10px] shadow">
+                  Solte na Guerreira! ✨
+                </span>
+              </div>
+            )}
+
+            {showMode && (
+              <div className="pointer-events-none fixed inset-0 z-10 overflow-hidden">
+                <div className="absolute -top-20 left-1/4 w-72 h-[120vh] bg-gradient-to-b from-pink-500/30 via-fuchsia-500/10 to-transparent blur-2xl animate-spotlight-1" />
+                <div className="absolute -top-20 right-1/4 w-72 h-[120vh] bg-gradient-to-b from-cyan-400/30 via-blue-500/10 to-transparent blur-2xl animate-spotlight-2" />
+              </div>
+            )}
+
+            {/* HEADER BAR */}
+            <header className="relative z-20 border-b border-pink-500/30 bg-slate-900/85 backdrop-blur-md px-4 py-2.5 shadow-lg">
+              <div className="max-w-[1400px] mx-auto flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-pink-500 via-purple-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-pink-500/30 border-2 border-white/40">
+                    <Crown className="w-6 h-6 text-yellow-200 drop-shadow" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-xl md:text-2xl font-bold tracking-wide bg-gradient-to-r from-pink-300 via-yellow-200 to-cyan-300 bg-clip-text text-transparent">
+                        Guerreiras K-Pop
+                      </h1>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                        <ShieldCheck className="w-3.5 h-3.5" /> LIVRE
+                      </span>
+                    </div>
+                    <p className="text-xs text-purple-200/80">Escolha uma categoria e arraste as roupas até a boneca!</p>
+                  </div>
+                </div>
+
+                {/* Seletor das 4 Guerreiras */}
+                <div className="flex items-center gap-2 bg-slate-950/80 p-1.5 rounded-2xl border border-purple-500/30">
+                  <span className="text-xs font-semibold text-purple-300 px-2 hidden sm:inline">Guerreira:</span>
+                  {WARRIORS.map((w) => {
+                    const isSelected = w.id === selectedWarriorId;
+                    return (
+                      <button
+                        key={w.id}
+                        onClick={() => handleSelectWarrior(w)}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-xl font-bold text-xs md:text-sm transition-all duration-200 ${
+                          isSelected
+                            ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/30 scale-105 border border-white/60'
+                            : 'bg-slate-800/70 text-slate-300 hover:bg-slate-800 hover:text-white'
+                        }`}
+                      >
+                        <span className="w-4 h-4 rounded-full border border-white shadow-sm shrink-0" style={{ backgroundColor: w.skin }} />
+                        <span>{w.name.split(' ')[0]}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                  <button
+                    onClick={toggleShowMode}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-bold text-sm transition-all duration-300 shadow-lg ${
+                      showMode
+                        ? 'bg-gradient-to-r from-yellow-400 via-pink-500 to-cyan-400 text-slate-950 scale-105 ring-4 ring-pink-400/50 animate-pulse'
+                        : 'bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-500 hover:to-purple-500 text-white border border-pink-400/40'
+                    }`}
+                  >
+                    <PartyPopper className="w-4 h-4" />
+                    <span>{showMode ? 'Palco Ativo!' : 'Modo Show'}</span>
+                  </button>
+
+                  <button
+                    onClick={handleSavePhoto}
+                    className="flex items-center gap-2 px-4 py-2 rounded-2xl font-bold text-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white shadow-lg shadow-cyan-500/25 border border-cyan-300/40 transition-all active:scale-95"
+                  >
+                    <Camera className="w-4 h-4" />
+                    <span>Salvar Foto</span>
+                  </button>
+                </div>
+              </div>
+            </header>
+
+            {photoSavedToast && (
+              <div className="fixed top-20 right-6 z-50 flex items-center gap-2 bg-emerald-500 text-slate-950 font-bold px-4 py-2.5 rounded-2xl shadow-2xl border-2 border-white animate-bounce">
+                <Check className="w-5 h-5" />
+                <span>Foto da sua Guerreira K-Pop salva com sucesso! 📸✨</span>
+              </div>
+            )}
+
+            {/* ÁREA PRINCIPAL DE JOGO (BONECA À ESQUERDA + BOTÕES DE CATEGORIA + GUARDA-ROUPA ABERTO AO LADO) */}
+            <main className="relative z-20 flex-1 max-w-[1400px] w-full mx-auto px-3 py-3 grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+              
+              {/* 1. PALCO DA BONECA (ZONA DE SOLTAR AS ROUPAS) - 5 COLUNAS */}
+              <div className="lg:col-span-5 flex flex-col items-center justify-center">
+                <div
+                  ref={stageDropRef}
+                  className={`w-full max-w-[410px] rounded-3xl p-3 transition-all duration-300 relative ${
+                    isOverCharacter
+                      ? 'bg-pink-500/30 border-4 border-yellow-300 shadow-[0_0_55px_rgba(250,204,21,0.75)] scale-[1.02]'
+                      : showMode
+                      ? 'bg-gradient-to-b from-pink-500/30 via-purple-600/30 to-cyan-500/30 shadow-[0_0_50px_rgba(236,72,153,0.45)] border-2 border-pink-400'
+                      : 'bg-slate-900/75 shadow-2xl border-2 border-purple-500/30'
+                  }`}
+                >
+                  {/* Topo do Card da Personagem */}
+                  <div className="flex items-center justify-between px-3 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-pink-500/20 text-pink-300 border border-pink-400/30 flex items-center gap-1">
+                        <Star className="w-3 h-3" />
+                        {currentWarrior.badge}
+                      </span>
+                      <span className="text-xs text-purple-200/90 font-medium">{currentWarrior.title}</span>
+                    </div>
+                    {isOverCharacter ? (
+                      <span className="px-2.5 py-0.5 rounded-full bg-yellow-300 text-slate-950 font-extrabold text-xs animate-bounce">
+                        SOLTE AQUI! ✨
+                      </span>
+                    ) : showMode ? (
+                      <span className="flex items-center gap-1 text-xs font-bold text-yellow-300 animate-bounce">
+                        <Music className="w-3.5 h-3.5" /> AO VIVO
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {/* Canvas SVG da Guerreira */}
+                  <div className="w-full aspect-[400/560] rounded-2xl overflow-hidden relative">
+                    <WarriorCanvas
+                      svgRef={svgRef}
+                      warrior={currentWarrior}
+                      state={customState}
+                      showMode={showMode}
+                      isDragOverCharacter={isOverCharacter}
+                      equipAnim={equipAnim}
+                    />
+                  </div>
+
+                  {/* Botões Rápidos */}
+                  <div className="mt-3 flex items-center justify-between gap-2 px-1">
+                    <button
+                      onClick={handleRandomize}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl bg-gradient-to-r from-purple-700 to-pink-600 hover:from-purple-600 hover:to-pink-500 text-white text-xs sm:text-sm font-bold border border-pink-300/40 shadow-md transition"
+                    >
+                      <Shuffle className="w-4 h-4 text-yellow-200" />
+                      <span>Look Surpresa</span>
+                    </button>
+                    <button
+                      onClick={handleReset}
+                      className="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-bold border border-slate-600 transition"
+                    >
+                      <RotateCcw className="w-4 h-4 text-cyan-300" />
+                      <span>Original</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. COLUNA DE BOTÕES DE CATEGORIA + ARMÁRIO VISUAL AO LADO - 7 COLUNAS */}
+              <div className="lg:col-span-7 flex flex-col sm:flex-row gap-3 h-full max-h-[650px]">
+                
+                {/* MENU DE BOTÕES GRANDES (Camisas, Saias, Botas, Cabelos, Maquiagem, Acessórios) */}
+                <div className="sm:w-48 flex sm:flex-col gap-2 overflow-x-auto sm:overflow-visible pb-1 sm:pb-0 shrink-0">
+                  {CATEGORIES.map((cat) => {
+                    const Icon = cat.icon;
+                    const isActive = activeCategory === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => setActiveCategory(cat.id)}
+                        className={`flex items-center gap-3 p-3.5 rounded-3xl font-bold text-left transition-all duration-200 shrink-0 sm:w-full border-2 ${
+                          isActive
+                            ? `bg-gradient-to-r ${cat.gradient} text-white ${cat.border} shadow-xl scale-[1.03]`
+                            : 'bg-slate-900/90 text-slate-300 border-purple-500/20 hover:bg-slate-800 hover:text-white'
+                        }`}
+                      >
+                        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
+                          isActive ? 'bg-white/25 text-white' : 'bg-slate-800 text-pink-300'
+                        }`}>
+                          <Icon className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <div className="text-sm sm:text-base font-extrabold leading-tight">{cat.label}</div>
+                          <div className={`text-[11px] font-medium ${isActive ? 'text-white/90' : 'text-slate-400'}`}>
+                            {cat.sub}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* GAVETA / VITRINE DO GUARDA-ROUPA QUE ABRE AO LADO COM AS ROUPAS PARA ARRASTAR */}
+                <div className="flex-1 bg-slate-900/90 backdrop-blur-xl rounded-3xl border-2 border-purple-500/35 shadow-2xl flex flex-col overflow-hidden">
+                  
+                  {/* Faixa Explicativa Infantil no Topo do Armário */}
+                  <div className="px-5 py-3.5 bg-slate-950/80 border-b border-purple-500/30 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-yellow-300 shrink-0" />
+                      <h2 className="text-base sm:text-lg font-extrabold text-white">
+                        {CATEGORIES.find((c) => c.id === activeCategory)?.label}
+                      </h2>
+                    </div>
+                    {activeCategory !== 'makeup' && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-pink-500/20 border border-pink-400/40 text-pink-200 text-xs font-bold">
+                        <HandGrab className="w-3.5 h-3.5 text-yellow-300" />
+                        Arraste a peça até a Guerreira!
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Grade de Peças do Menu Selecionado */}
+                  <div className="p-4 sm:p-5 overflow-y-auto custom-scrollbar flex-1">
+                    
+                    {/* ==========================================
+                        MENU 1: CAMISAS, TOPS & JAQUETAS (ARRASTÁVEIS)
+                       ========================================== */}
+                    {activeCategory === 'tops' && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+                        {TOPS.map((item) =>
+                          renderDraggableCard('top', item.id, item.name, item.badge, customState.top === item.id)
+                        )}
+                      </div>
+                    )}
+
+                    {/* ==========================================
+                        MENU 2: SAIAS, CALÇAS & SHORTS (ARRASTÁVEIS)
+                       ========================================== */}
+                    {activeCategory === 'bottoms' && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+                        {BOTTOMS.map((item) =>
+                          renderDraggableCard('bottom', item.id, item.name, item.badge, customState.bottom === item.id)
+                        )}
+                      </div>
+                    )}
+
+                    {/* ==========================================
+                        MENU 3: BOTAS & TÊNIS (ARRASTÁVEIS)
+                       ========================================== */}
+                    {activeCategory === 'shoes' && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+                        {SHOES.map((item) =>
+                          renderDraggableCard('shoes', item.id, item.name, 'K-BOOT', customState.shoes === item.id)
+                        )}
+                      </div>
+                    )}
+
+                    {/* ==========================================
+                        MENU 4: CABELOS (CORTES ARRASTÁVEIS + TINTURAS)
+                       ========================================== */}
+                    {activeCategory === 'hair' && (
+                      <div className="space-y-6">
+                        <div>
+                          <h3 className="text-xs font-extrabold uppercase tracking-wider text-pink-300 mb-3 flex items-center gap-1.5">
+                            <Scissors className="w-4 h-4" /> Arraste o Penteado até a Guerreira:
+                          </h3>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {HAIR_STYLES.map((style) =>
+                              renderDraggableCard('hairStyle', style.id, style.name, 'IDOL HAIR', customState.hairStyle === style.id)
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="text-xs font-extrabold uppercase tracking-wider text-cyan-300 mb-3 flex items-center gap-1.5">
+                            <Palette className="w-4 h-4" /> Escolha a Cor do Cabelo:
+                          </h3>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            {HAIR_COLORS.map((color) => {
+                              const active = customState.hairColor === color.hex;
+                              return (
+                                <button
+                                  key={color.id}
+                                  onClick={() => updateItem('hairColor', color.hex)}
+                                  className={`flex items-center gap-2.5 p-2.5 rounded-2xl border-2 transition-all ${
+                                    active
+                                      ? 'bg-slate-800 border-yellow-300 shadow-lg scale-105'
+                                      : 'bg-slate-950/70 border-slate-700/80 hover:border-pink-400'
+                                  }`}
+                                >
+                                  <span
+                                    className="w-7 h-7 rounded-full border-2 border-white shadow-inner shrink-0"
+                                    style={{ backgroundColor: color.hex }}
+                                  />
+                                  <span className="text-xs font-bold text-white text-left leading-tight">
+                                    {color.name}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ==========================================
+                        MENU 5: MAQUIAGEM (MANTIDO NO ESTILO DE BOTÕES DIRETOS!)
+                       ========================================== */}
+                    {activeCategory === 'makeup' && (
+                      <div className="space-y-6">
+                        <div>
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-purple-300 flex items-center gap-2 mb-3">
+                            <Sparkles className="w-4 h-4" /> Sombra Cintilante de Palco
+                          </h3>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {EYESHADOWS.map((shadow) => {
+                              const active = customState.eyeshadow === shadow.id;
+                              return (
+                                <button
+                                  key={shadow.id}
+                                  onClick={() => updateItem('eyeshadow', shadow.id)}
+                                  className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all ${
+                                    active
+                                      ? 'bg-purple-500/25 border-yellow-300 shadow-md scale-[1.02]'
+                                      : 'bg-slate-800/60 border-slate-700/70 hover:bg-slate-800'
+                                  }`}
+                                >
+                                  <span
+                                    className="w-7 h-7 rounded-full border-2 border-white flex items-center justify-center shrink-0"
+                                    style={{ backgroundColor: shadow.color === 'transparent' ? '#334155' : shadow.color }}
+                                  >
+                                    {shadow.shimmer && <span className="text-[10px]">✨</span>}
+                                  </span>
+                                  <span className="text-xs font-bold text-white text-left">{shadow.name}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-pink-300 flex items-center gap-2 mb-3">
+                            <Heart className="w-4 h-4" /> Blush Fofo & Glitter Facial
+                          </h3>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {BLUSHES.map((blush) => {
+                              const active = customState.blush === blush.id;
+                              return (
+                                <button
+                                  key={blush.id}
+                                  onClick={() => updateItem('blush', blush.id)}
+                                  className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all ${
+                                    active
+                                      ? 'bg-pink-500/25 border-yellow-300 shadow-md scale-[1.02]'
+                                      : 'bg-slate-800/60 border-slate-700/70 hover:bg-slate-800'
+                                  }`}
+                                >
+                                  <span className="w-7 h-7 rounded-full border-2 border-white shrink-0" style={{ backgroundColor: blush.color }} />
+                                  <span className="text-xs font-bold text-white text-left">{blush.name}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-rose-300 flex items-center gap-2 mb-3">
+                            <Palette className="w-4 h-4" /> Gloss Labial K-Pop
+                          </h3>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {LIP_COLORS.map((lip) => {
+                              const active = customState.lipColor === lip.id;
+                              return (
+                                <button
+                                  key={lip.id}
+                                  onClick={() => updateItem('lipColor', lip.id)}
+                                  className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all ${
+                                    active
+                                      ? 'bg-rose-500/25 border-yellow-300 shadow-md scale-[1.02]'
+                                      : 'bg-slate-800/60 border-slate-700/70 hover:bg-slate-800'
+                                  }`}
+                                >
+                                  <span className="w-7 h-7 rounded-full border-2 border-white shrink-0" style={{ backgroundColor: lip.color }} />
+                                  <span className="text-xs font-bold text-white text-left">{lip.name}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ==========================================
+                        MENU 6: ACESSÓRIOS ARRASTÁVEIS (VARINHAS, TIARAS, PULSEIRAS)
+                       ========================================== */}
+                    {activeCategory === 'accessories' && (
+                      <div className="space-y-6">
+                        <div>
+                          <h3 className="text-xs font-extrabold uppercase tracking-wider text-pink-300 mb-3">
+                            ✨ Varinhas de Luz (Lightsticks) & Microfones
+                          </h3>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {HAND_ITEMS.map((item) =>
+                              renderDraggableCard('handItem', item.id, item.name, 'MÃO', customState.handItem === item.id)
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="text-xs font-extrabold uppercase tracking-wider text-amber-300 mb-3">
+                            👑 Tiaras, Visores & Headphones
+                          </h3>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {HEADPIECES.map((item) =>
+                              renderDraggableCard('headpiece', item.id, item.name, 'CABEÇA', customState.headpiece === item.id)
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="text-xs font-extrabold uppercase tracking-wider text-cyan-300 mb-3">
+                            ⚡ Braceletes & Munhequeiras Neon
+                          </h3>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {WRIST_ITEMS.map((item) =>
+                              renderDraggableCard('wristItem', item.id, item.name, 'PULSO', customState.wristItem === item.id)
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
